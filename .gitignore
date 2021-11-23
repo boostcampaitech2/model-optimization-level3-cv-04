@@ -1,1 +1,4 @@
 .git/
+
+# model
+exp/*
