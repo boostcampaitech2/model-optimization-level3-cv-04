@@ -95,3 +95,26 @@ def randaugment_train(
             ),
         ]
     )
+
+
+def custom_augment_train(
+    dataset: str = "CIFAR10", img_size: float = 32
+) -> transforms.Compose:
+    """Custom data augmentation rule for training TACO."""
+    return transforms.Compose(
+        [
+            SquarePad(),
+            transforms.Resize((int(img_size * 1.2), int(img_size * 1.2))),
+            transforms.RandomResizedCrop(
+                size=img_size, ratio=(0.75, 1.0, 1.3333333333333333)
+            ),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomVerticalFlip(),
+            transforms.ColorJitter(),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                DATASET_NORMALIZE_INFO[dataset]["MEAN"],
+                DATASET_NORMALIZE_INFO[dataset]["STD"],
+            ),
+        ]
+    )
