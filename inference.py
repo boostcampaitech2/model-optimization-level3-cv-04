@@ -16,8 +16,10 @@ from torchvision.transforms import Resize
 from tqdm import tqdm
 
 from src.augmentation.policies import simple_augment_test
-from src.model import Model
 from src.utils.common import read_yaml
+
+from swin.models import build_model
+from swin.config import get_config
 
 if torch.__version__ >= "1.8.1":
     from torch import profiler
@@ -172,11 +174,13 @@ if __name__ == "__main__":
     if args.weight.endswith("ts"):
         model = torch.jit.load(args.weight)
     else:
-        model_instance = Model(args.model_config, verbose=True)
-        model_instance.model.load_state_dict(
+        model_config = get_config(args.model_config)
+
+        model = build_model(model_config)
+        model.load_state_dict(
             torch.load(args.weight, map_location=torch.device("cpu"))
         )
-        model = model_instance.model
+        model = model
 
     # inference
     inference(model, dataloader, args.dst, t0)
