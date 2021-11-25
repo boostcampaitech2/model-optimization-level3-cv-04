@@ -24,3 +24,9 @@ def get_label_counts(dataset_path: str):
     for p, l in td.samples:
         label_counts[l] += 1
     return label_counts
+
+def get_learning_rate(optimizer):
+    lr = []
+    for param_group in optimizer.param_groups:
+        lr += [param_group['lr']]
+    return lr

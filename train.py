@@ -12,6 +12,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import yaml
+import wandb
 
 from src.dataloader import create_dataloader
 from src.loss import CustomCriterion
@@ -109,6 +110,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--seed", default=42, type=int, help="seed"
     )
+    parser.add_argument(
+        "--run_name", default="exp", type=str, help="run name for wandb"
+    )
     args = parser.parse_args()
 
     model_config = read_yaml(cfg=args.model)
@@ -126,6 +130,13 @@ if __name__ == "__main__":
         os.rename(log_dir, new_log_dir)
 
     os.makedirs(log_dir, exist_ok=True)
+
+    # for wandb
+    wandb.init(project='lightweight', entity='cv4', name = args.run_name, save_code = True)
+    wandb.run.name = args.run_name
+    wandb.run.save()
+    wandb.config.update(model_config)
+    wandb.config.update(data_config)
 
     test_loss, test_f1, test_acc = train(
         model_config=model_config,
