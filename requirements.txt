@@ -11,3 +11,4 @@ split-folders==0.4.3
 ptflops
 wandb
 timm
+yacs
