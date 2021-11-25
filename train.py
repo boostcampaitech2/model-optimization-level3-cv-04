@@ -124,6 +124,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--seed", default=42, type=int, help="seed"
     )
+    parser.add_argument(
+        "--save_dir", default="latest", type=str, help="exp name"
+    )
     args = parser.parse_args()
 
     model_config = read_yaml(cfg=args.model)
