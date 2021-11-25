@@ -3,3 +3,5 @@ __pycache__
 
 # output
 exp
+output.csv
+wandb
