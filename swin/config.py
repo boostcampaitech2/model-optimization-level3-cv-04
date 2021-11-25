@@ -25,7 +25,7 @@ _C.DATA.DATA_PATH = ''
 # Dataset name
 _C.DATA.DATASET = 'imagenet'
 # Input image size
-_C.DATA.IMG_SIZE = 256
+_C.DATA.IMG_SIZE = 224
 # Interpolation to resize image (random, bilinear, bicubic)
 _C.DATA.INTERPOLATION = 'bicubic'
 # Use zipped dataset instead of folder dataset
@@ -49,7 +49,7 @@ _C.MODEL.NAME = 'swin_tiny_patch4_window7_224'
 # Checkpoint to resume, could be overwritten by command line argument
 _C.MODEL.RESUME = ''
 # Number of classes, overwritten in data preparation
-_C.MODEL.NUM_CLASSES = 6
+_C.MODEL.NUM_CLASSES = 1000
 # Dropout rate
 _C.MODEL.DROP_RATE = 0.0
 # Drop path rate
@@ -198,7 +198,6 @@ def _update_config_from_file(config, cfg_file):
 
 def update_config(config, cfg_file):
     _update_config_from_file(config, cfg_file)
-
 
 def get_config(cfg_file):
     """Get a yacs CfgNode object with default values."""

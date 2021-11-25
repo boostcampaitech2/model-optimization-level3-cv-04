@@ -19,9 +19,11 @@ from src.loss import CustomCriterion
 from src.trainer import TorchTrainer
 from src.utils.common import get_label_counts, read_yaml
 from src.utils.torch_utils import check_runtime, model_info
+from src.utils.setseed import setSeed
 
 from swin.models import build_model
 from swin.config import get_config
+from collections import OrderedDict
 
 def train(
     model_config: Dict[str, Any],
@@ -41,10 +43,19 @@ def train(
     model = build_model(model_config)
     model_path = os.path.join(log_dir, "best.pt")
     print(f"Model save path: {model_path}")
-    if os.path.isfile(model_path):
-        model.load_state_dict(
-            torch.load(model_path, map_location=device)
-        )
+
+    # load Pretrained model
+    checkpoint = os.path.join("swin/saved", "pretrained.pt")
+    if os.path.isfile(checkpoint):
+        print(f"Model load: {checkpoint}")
+        state_dict = torch.load(checkpoint, map_location=device)['model']
+        # num_classes가 달라서 head의 weight는 불러오지 않음
+        temp = OrderedDict()
+        for n, v in state_dict.items():
+            name = n.replace("head.","") 
+            temp[name] = v
+        model.load_state_dict(temp, strict=False)
+
     model.to(device)
 
     # Create dataloader
@@ -71,7 +82,6 @@ def train(
     scaler = (
         torch.cuda.amp.GradScaler() if fp16 and device != torch.device("cpu") else None
     )
-
     # Create trainer
     trainer = TorchTrainer(
         model=model,
@@ -111,10 +121,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "--run_name", default="exp", type=str, help="run name for wandb"
     )
+    parser.add_argument(
+        "--seed", default=42, type=int, help="seed"
+    )
     args = parser.parse_args()
 
     model_config = read_yaml(cfg=args.model)
     data_config = read_yaml(cfg=args.data)
+    setSeed(args.seed)
 
     data_config["DATA_PATH"] = os.environ.get("SM_CHANNEL_TRAIN", data_config["DATA_PATH"])
 
@@ -127,7 +141,7 @@ if __name__ == "__main__":
         os.rename(log_dir, new_log_dir)
 
     os.makedirs(log_dir, exist_ok=True)
-
+    
     # for wandb
     wandb.init(project='lightweight', entity='cv4', name = args.run_name, save_code = True)
     wandb.run.name = args.run_name
