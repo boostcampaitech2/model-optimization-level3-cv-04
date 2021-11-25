@@ -45,7 +45,7 @@ def train(
     print(f"Model save path: {model_path}")
 
     # load Pretrained model
-    checkpoint = os.path.join("swin/saved", "pretrained.pt")
+    checkpoint = os.path.join(f"swin/saved/{model_config.MODEL.NAME}.pt")
     if os.path.isfile(checkpoint):
         print(f"Model load: {checkpoint}")
         state_dict = torch.load(checkpoint, map_location=device)['model']
