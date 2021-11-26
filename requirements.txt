@@ -12,3 +12,4 @@ ptflops
 wandb
 ipywidgets
 matplotlib
+timm
