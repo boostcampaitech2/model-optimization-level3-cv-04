@@ -1,7 +1,9 @@
 .git/
 __pycache__
+.ipynb_checkpoints/
 
 # output
 exp
 output.csv
 wandb
+input/*
