@@ -87,6 +87,19 @@ def get_dataset(
         train_dataset = ImageFolder(root=train_path, transform=transform_train)
         val_dataset = ImageFolder(root=val_path, transform=transform_test)
         test_dataset = ImageFolder(root=test_path, transform=transform_test)
+    
+    elif dataset_name == "TUNE":
+        train_path = os.path.join(data_path, "train")
+        val_path = os.path.join(data_path, "val")
+        test_path = os.path.join(data_path, "test")
+
+        train_dataset = ImageFolder(root=train_path, transform=transform_train)
+        train_length = int(len(train_dataset) * (1.0-val_ratio))
+        train_dataset, _ = random_split(
+            train_dataset, [train_length, len(train_dataset) - train_length]
+        )
+        val_dataset = ImageFolder(root=val_path, transform=transform_test)
+        test_dataset = ImageFolder(root=test_path, transform=transform_test)
 
     else:
         Dataset = getattr(
