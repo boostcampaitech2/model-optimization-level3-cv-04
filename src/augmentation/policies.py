@@ -127,6 +127,7 @@ def albu_heavy_train(
 ) -> A.Compose:
     """Custom data augmentation rule for training TACO."""
     return A.Compose([
+        A.Resize(img_size, img_size),
         A.OneOf([
             A.Flip(p=1.0),
             A.RandomRotate90(p=1.0)
@@ -140,5 +141,7 @@ def albu_heavy_train(
             A.GaussianBlur(p=1.0),
             A.MedianBlur(blur_limit=5, p=1.0), 
             A.MotionBlur(p=1.0)
-        ], p=0.1)
+        ], p=0.1), 
+        A.CLAHE(p=0.01),
+        ToTensorV2()
     ])
