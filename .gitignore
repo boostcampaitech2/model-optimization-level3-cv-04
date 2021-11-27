@@ -5,4 +5,4 @@ __pycache__
 exp
 output.csv
 wandb
-swin/saved
+saved
