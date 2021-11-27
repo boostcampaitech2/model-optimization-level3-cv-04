@@ -47,8 +47,14 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
 
     # Module 2
     m2 = trial.suggest_categorical(
-        "m2", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "MBConv",
-        "ShuffleNetV2", "Pass"]
+        "m2", [
+            "Conv", 
+            "DWConv", 
+            "InvertedResidualv2", 
+            "InvertedResidualv3", 
+            "MBConv",
+            "ShuffleNetV2", 
+            "Pass"]
     )
     m2_args = []
     m2_repeat = trial.suggest_int("m2/repeat", 1, 5)
@@ -89,7 +95,7 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m2_kernel = trial.suggest_int("m2/kernel_size", low=3, high=5, step=2)
         m2_args = [m2_t, m2_c, m2_stride, m2_kernel]
     elif m2 == "ShuffleNetV2":
-        m2_c = m1_out_channel * 2
+        m2_c = m2_out_channel
         m2_args = [m2_stride]
     if not m2 == "Pass":
         if m2_stride == 2:
@@ -100,8 +106,14 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
 
     # Module 3
     m3 = trial.suggest_categorical(
-        "m3", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "MBConv",
-        "ShuffleNetV2", "Pass"]
+        "m3", [
+            "Conv", 
+            "DWConv", 
+            "InvertedResidualv2", 
+            "InvertedResidualv3", 
+            "MBConv",
+            "ShuffleNetV2", 
+            "Pass"]
     )
     m3_args = []
     m3_repeat = trial.suggest_int("m3/repeat", 1, 5)
@@ -139,7 +151,7 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m3_kernel = trial.suggest_int("m3/kernel_size", low=3, high=5, step=2)
         m3_args = [m3_t, m3_c, m3_stride, m3_kernel]
     elif m3 == "ShuffleNetV2":
-        m3_c = m2_out_channel
+        m3_c = trial.suggest_int("m3/out_channels", low=16, high=128, step=16)
         m3_args = [m3_stride]
     if not m3 == "Pass":
         if m3_stride == 2:
@@ -150,8 +162,14 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
 
     # Module 4
     m4 = trial.suggest_categorical(
-        "m4", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "MBConv",
-        "ShuffleNetV2", "Pass"]
+        "m4", [
+            "Conv", 
+            "DWConv", 
+            "InvertedResidualv2", 
+            "InvertedResidualv3", 
+            "MBConv",
+            "ShuffleNetV2", 
+            "Pass"]
     )
     m4_args = []
     m4_repeat = trial.suggest_int("m4/repeat", 1, 5)
@@ -192,7 +210,7 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m4_kernel = trial.suggest_int("m4/kernel_size", low=3, high=5, step=2)
         m4_args = [m4_t, m4_c, m4_stride, m4_kernel]
     elif m4 == "ShuffleNetV2":
-        m4_c = m3_out_channel * 2
+        m4_c = trial.suggest_int("m4/out_channels", low=16, high=256, step=16)
         m4_args = [m4_stride]
     if not m4 == "Pass":
         if m4_stride == 2:
@@ -203,8 +221,14 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
 
     # Module 5
     m5 = trial.suggest_categorical(
-        "m5", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "MBConv",
-        "ShuffleNetV2", "Pass"]
+        "m5", [
+            "Conv", 
+            "DWConv", 
+            "InvertedResidualv2", 
+            "InvertedResidualv3", 
+            "MBConv",
+            "ShuffleNetV2", 
+            "Pass"]
     )
     m5_args = []
     m5_repeat = trial.suggest_int("m5/repeat", 1, 5)
@@ -246,7 +270,7 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m5_kernel = trial.suggest_int("m5/kernel_size", low=3, high=5, step=2)
         m5_args = [m5_t, m5_c, m5_stride, m5_kernel]
     elif m5 == "ShuffleNetV2":
-        m5_c = m4_out_channel
+        m5_c = trial.suggest_int("m5/out_channels", low=16, high=256, step=16)
         m5_args = [m5_stride]
     if not m5 == "Pass":
         if m5_stride == 2:
@@ -257,8 +281,14 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
 
     # Module 6
     m6 = trial.suggest_categorical(
-        "m6", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "MBConv",
-        "ShuffleNetV2", "Pass"]
+        "m6", [
+            "Conv", 
+            "DWConv", 
+            "InvertedResidualv2", 
+            "InvertedResidualv3", 
+            "MBConv",
+            "ShuffleNetV2", 
+            "Pass"]
     )
     m6_args = []
     m6_repeat = trial.suggest_int("m6/repeat", 1, 5)
@@ -299,7 +329,7 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m6_kernel = trial.suggest_int("m6/kernel_size", low=3, high=5, step=2)
         m6_args = [m6_t, m6_c, m6_stride, m6_kernel]
     elif m6 == "ShuffleNetV2":
-        m6_c = m5_out_channel * 2
+        m6_c = trial.suggest_int("m6/out_channels", low=16, high=512, step=16)
         m6_args = [m6_stride]
     if not m6 == "Pass":
         if m6_stride == 2:
@@ -310,17 +340,21 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
 
     # Module 7
     m7 = trial.suggest_categorical(
-        "m7", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "MBConv",
-        "ShuffleNetV2", "Pass"]
+        "m7", [
+            "Conv", 
+            "DWConv", 
+            "InvertedResidualv2", 
+            "InvertedResidualv3", 
+            "MBConv",
+            "ShuffleNetV2", 
+            "Pass"]
     )
     m7_args = []
     m7_repeat = trial.suggest_int("m7/repeat", 1, 5)
     m7_stride = trial.suggest_int("m7/stride", low=1, high=UPPER_STRIDE)
     if m7 == "Conv":
         # Conv args: [out_channel, kernel_size, stride, padding, groups, activation]
-        m7_out_channel = trial.suggest_int(
-            "m7/out_channels", low=128, high=1024, step=128
-        )
+        m7_out_channel = trial.suggest_int("m7/out_channels", low=128, high=1024, step=128)
         m7_kernel = trial.suggest_int("m7/kernel_size", low=1, high=5, step=2)
         m7_activation = trial.suggest_categorical(
             "m7/activation", ["ReLU", "Hardswish"]
@@ -328,9 +362,7 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m7_args = [m7_out_channel, m7_kernel, m7_stride, None, 1, m7_activation]
     elif m7 == "DWConv":
         # DWConv args: [out_channel, kernel_size, stride, padding_size, activation]
-        m7_out_channel = trial.suggest_int(
-            "m7/out_channels", low=128, high=1024, step=128
-        )
+        m7_out_channel = trial.suggest_int("m7/out_channels", low=128, high=1024, step=128)
         m7_kernel = trial.suggest_int("m7/kernel_size", low=1, high=5, step=2)
         m7_activation = trial.suggest_categorical(
             "m7/activation", ["ReLU", "Hardswish"]
@@ -353,7 +385,7 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m7_kernel = trial.suggest_int("m7/kernel_size", low=3, high=5, step=2)
         m7_args = [m7_t, m7_c, m7_stride, m7_kernel]
     elif m7 == "ShuffleNetV2":
-        m7_c = m6_out_channel
+        m7_c = trial.suggest_int("m7/out_channels", low=128, high=1024, step=128)
         m7_args = [m7_stride]
     if not m7 == "Pass":
         if m7_stride == 2:
