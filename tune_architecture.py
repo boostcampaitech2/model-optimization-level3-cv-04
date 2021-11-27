@@ -95,7 +95,7 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m2_kernel = trial.suggest_int("m2/kernel_size", low=3, high=5, step=2)
         m2_args = [m2_t, m2_c, m2_stride, m2_kernel]
     elif m2 == "ShuffleNetV2":
-        m2_c = m2_out_channel
+        m2_c = trial.suggest_int("m2/out_channels", low=16, high=128, step=16)
         m2_args = [m2_stride]
     if not m2 == "Pass":
         if m2_stride == 2:
@@ -564,6 +564,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Optuna tuner.")
     parser.add_argument("--gpu", default=0, type=int, help="GPU id to use")
     parser.add_argument("--storage", default="", type=str, help="Optuna database storage path.")
-    parser.add_argument("--seed", default=42, type=int, help="Sampler seed")
+    parser.add_argument("--seed", default=0, type=int, help="Sampler seed")
     args = parser.parse_args()
     tune(args.gpu, args.seed, storage=args.storage if args.storage != "" else None)
