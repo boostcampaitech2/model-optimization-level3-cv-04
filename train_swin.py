@@ -16,11 +16,13 @@ import wandb
 
 from src.dataloader import create_dataloader
 from src.loss import CustomCriterion
-from src.model import Model
 from src.trainer import TorchTrainer
 from src.utils.common import get_label_counts, read_yaml
 from src.utils.torch_utils import check_runtime, model_info
 from src.utils.setseed import setSeed
+
+from swin.models import build_model
+from swin.config import get_config
 from collections import OrderedDict
 
 def train(
@@ -36,30 +38,32 @@ def train(
         yaml.dump(data_config, f, default_flow_style=False)
     with open(os.path.join(log_dir, "model.yml"), "w") as f:
         yaml.dump(model_config, f, default_flow_style=False)
+    model_config = get_config(args.model)
 
-    model_instance = Model(model_config, verbose=True)
+    model = build_model(model_config)
     model_path = os.path.join(log_dir, "best.pt")
     print(f"Model save path: {model_path}")
 
     # load Pretrained model
-    checkpoint = os.path.join("saved/mobilenetv3_small_0.75.pt")
+    checkpoint = os.path.join(f"swin/saved/{model_config.MODEL.NAME}.pt")
     if os.path.isfile(checkpoint):
         print(f"Model load: {checkpoint}")
-        state_dict = torch.load(checkpoint, map_location=device)
+        state_dict = torch.load(checkpoint, map_location=device)['model']
         # num_classes가 달라서 head의 weight는 불러오지 않음
         temp = OrderedDict()
         for n, v in state_dict.items():
             name = n.replace("head.","") 
             temp[name] = v
-        model_instance.load_state_dict(temp, strict=False)
-    model_instance.model.to(device)
+        model.load_state_dict(temp, strict=False)
+
+    model.to(device)
 
     # Create dataloader
     train_dl, val_dl, test_dl = create_dataloader(data_config)
 
     # Create optimizer, scheduler, criterion
     optimizer = torch.optim.SGD(
-        model_instance.model.parameters(), lr=data_config["INIT_LR"], momentum=0.9
+        model.parameters(), lr=data_config["INIT_LR"], momentum=0.9
     )
     scheduler = torch.optim.lr_scheduler.OneCycleLR(
         optimizer=optimizer,
@@ -78,10 +82,9 @@ def train(
     scaler = (
         torch.cuda.amp.GradScaler() if fp16 and device != torch.device("cpu") else None
     )
-
     # Create trainer
     trainer = TorchTrainer(
-        model=model_instance.model,
+        model=model,
         criterion=criterion,
         optimizer=optimizer,
         scheduler=scheduler,
@@ -97,9 +100,9 @@ def train(
     )
 
     # evaluate model with test set
-    model_instance.model.load_state_dict(torch.load(model_path))
+    model.load_state_dict(torch.load(model_path))
     test_loss, test_f1, test_acc = trainer.test(
-        model=model_instance.model, test_dataloader=val_dl if val_dl else test_dl
+        model=model, test_dataloader=val_dl if val_dl else test_dl
     )
     return test_loss, test_f1, test_acc
 
@@ -108,18 +111,21 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train model.")
     parser.add_argument(
         "--model",
-        default="configs/model/mobilenetv3.yaml",
+        default="swin/configs/swin_mlp_tiny_c24_patch4_window8_256.yaml",
         type=str,
         help="model config",
     )
     parser.add_argument(
-        "--data", default="configs/data/taco.yaml", type=str, help="data config"
+        "--data", default="configs/data/taco_swin.yaml", type=str, help="data config"
+    )
+    parser.add_argument(
+        "--run_name", default="exp", type=str, help="run name for wandb"
     )
     parser.add_argument(
         "--seed", default=42, type=int, help="seed"
     )
     parser.add_argument(
-        "--run_name", default="exp", type=str, help="run name for wandb"
+        "--save_dir", default="latest", type=str, help="exp name"
     )
     args = parser.parse_args()
 
@@ -138,7 +144,7 @@ if __name__ == "__main__":
         os.rename(log_dir, new_log_dir)
 
     os.makedirs(log_dir, exist_ok=True)
-
+    
     # for wandb
     wandb.init(project='lightweight', entity='cv4', name = args.run_name, save_code = True)
     wandb.run.name = args.run_name
