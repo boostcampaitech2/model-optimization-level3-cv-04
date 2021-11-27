@@ -13,7 +13,8 @@ from src.dataloader import create_dataloader
 from src.model import Model
 from src.utils.torch_utils import model_info, check_runtime
 from src.utils.common import read_yaml
-from src.trainer import TorchTrainer, count_model_params
+from train import train
+from src.trainer import count_model_params
 from typing import Any, Dict, List, Tuple
 import argparse
 
@@ -425,7 +426,7 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
     params_nums = count_model_params(model)
 
     # skip unsuitable model 
-    if mean_time >= 100: 
+    if mean_time >= 10: 
         print(f' trial: {trial.number}, This model takes too much time:{mean_time}')
         raise optuna.structs.TrialPruned()
 
@@ -434,31 +435,17 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
         raise optuna.structs.TrialPruned()
 
     # train current model
-    train_loader, val_loader, test_loader = create_dataloader(data_config)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
-    scheduler = torch.optim.lr_scheduler.OneCycleLR(
-        optimizer,
-        max_lr=0.1,
-        steps_per_epoch=len(train_loader),
-        epochs=data_config["EPOCHS"],
-        pct_start=0.05,
-    )
-    trainer = TorchTrainer(
-        model,
-        criterion,
-        optimizer,
-        scheduler,
+    test_loss, test_f1, test_acc = train(
+        model_config=model_config,
+        data_config=data_config,
+        log_dir=log_dir,
+        fp16=data_config["FP16"],
         device=device,
-        verbose=1,
-        model_path=log_dir,
     )
-    trainer.train(train_loader, data_config["EPOCHS"], val_dataloader=val_loader)
-    loss, f1_score, acc_percent = trainer.test(model, test_dataloader=val_loader)
     
-    wandb.log({'f1':f1_score,'params_nums':params_nums, 'mean_time':mean_time})
+    wandb.log({'f1':test_f1,'params_nums':params_nums, 'mean_time':mean_time})
     
-    return f1_score, params_nums, mean_time
+    return test_f1, params_nums, mean_time
 
 
 def get_best_trial_with_condition(optuna_study: optuna.study.Study) -> Dict[str, Any]:
