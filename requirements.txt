@@ -12,3 +12,5 @@ ptflops
 wandb
 timm
 yacs
+ipywidgets
+matplotlib
