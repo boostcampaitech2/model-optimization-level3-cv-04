@@ -116,7 +116,7 @@ if __name__ == "__main__":
         help="model config",
     )
     parser.add_argument(
-        "--data", default="configs/data/taco_swin.yaml", type=str, help="data config"
+        "--data", default="configs/data/taco_swin_aug.yaml", type=str, help="data config"
     )
     parser.add_argument(
         "--run_name", default="exp", type=str, help="run name for wandb"

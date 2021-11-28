@@ -132,7 +132,7 @@ def albu_heavy_train(
             A.Flip(p=1.0),
             A.RandomRotate90(p=1.0)
         ], p=0.5),
-        A.RandomResizedCrop(height=512, width=512, scale=(0.5, 1.0), p=0.5),
+        A.RandomResizedCrop(height=img_size, width=img_size, scale=(0.5, 1.0), p=0.5),
         A.RandomBrightnessContrast(brightness_limit=0.1, contrast_limit=0.15, p=0.5),
         A.HueSaturationValue(hue_shift_limit=15, sat_shift_limit=25, val_shift_limit=10, p=0.5),
         A.GaussNoise(p=0.3),

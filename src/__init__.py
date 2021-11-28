@@ -1,4 +1,4 @@
-from dataset import AlbuImageFolder
+from .dataset import AlbuImageFolder
 
 __all__ = [
     "AlbuImageFolder"

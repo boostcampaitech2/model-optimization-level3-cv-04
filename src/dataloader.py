@@ -56,7 +56,7 @@ def get_dataset(
     data_path: str = "./save/data",
     dataset_name: str = "CIFAR10",
     img_size: float = 32,
-    val_ratio: float=0.2,
+    val_ratio: float = 0.2,
     transform_train: str = "simple_augment_train",
     transform_test: str = "simple_augment_test",
     transform_train_params: Dict[str, int] = None,
@@ -67,6 +67,8 @@ def get_dataset(
         transform_train_params = dict()
     if not transform_test_params:
         transform_test_params = dict()
+
+    albu = "albu" in transform_train
 
     # preprocessing policies
     transform_train = getattr(
@@ -84,7 +86,8 @@ def get_dataset(
         train_path = os.path.join(data_path, "train")
         val_path = os.path.join(data_path, "val")
         test_path = os.path.join(data_path, "test")
-        if "albu" in transform_train:
+        if albu:
+            print("Calling Albu Dataset")
             train_dataset = AlbuImageFolder(root=train_path, transform=transform_train)
         else:
             train_dataset = ImageFolder(root=train_path, transform=transform_train)

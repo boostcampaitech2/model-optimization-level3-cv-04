@@ -1,11 +1,6 @@
-import torch.utils.data as data
-from torchvision.datasets.vision import VisionDataset
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
-import os
-import torchvision.datasets as datasets
-from torchvision.datasets.folder import ImageFolder, make_dataset, default_loader
-from typing import Any, Callable, cast, Dict, List, Optional, Tuple
+from torchvision.datasets.folder import ImageFolder, default_loader
+from typing import Any, Callable, Optional, Tuple
+import cv2
 
 IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif', '.tiff', '.webp')
 
@@ -30,7 +25,7 @@ class AlbuImageFolder(ImageFolder):
         sample = cv2.cvtColor(sample, cv2.COLOR_BGR2RGB)
         if self.transform is not None:
             augmented = self.transform(image=sample)
-            sample = augmented['image']
+            sample = augmented['image'].float()
         if self.target_transform is not None:
             target = self.target_transform(target)
 
