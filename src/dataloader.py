@@ -17,6 +17,7 @@ from torchvision.datasets import ImageFolder, VisionDataset
 from src.utils.data import weights_for_balanced_classes
 from src.utils.torch_utils import split_dataset_index
 
+from src.dataset import AlbuImageFolder
 
 def create_dataloader(
     config: Dict[str, Any],
@@ -83,8 +84,10 @@ def get_dataset(
         train_path = os.path.join(data_path, "train")
         val_path = os.path.join(data_path, "val")
         test_path = os.path.join(data_path, "test")
-
-        train_dataset = ImageFolder(root=train_path, transform=transform_train)
+        if "albu" in transform_train:
+            train_dataset = AlbuImageFolder(root=train_path, transform=transform_train)
+        else:
+            train_dataset = ImageFolder(root=train_path, transform=transform_train)
         val_dataset = ImageFolder(root=val_path, transform=transform_test)
         test_dataset = ImageFolder(root=test_path, transform=transform_test)
 

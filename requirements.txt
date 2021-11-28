@@ -13,3 +13,4 @@ wandb
 ipywidgets
 matplotlib
 timm
+opencv-python
