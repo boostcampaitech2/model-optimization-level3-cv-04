@@ -10,5 +10,7 @@ pre-commit==2.9.3
 split-folders==0.4.3
 ptflops
 wandb
+timm
+yacs
 ipywidgets
 matplotlib
