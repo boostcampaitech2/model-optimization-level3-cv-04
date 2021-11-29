@@ -8,7 +8,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
 class CustomCriterion:
     """Custom Criterion."""
 
@@ -63,15 +62,15 @@ class CustomCriterion_KD:
         return self.criterion(logits, labels, teacher_logits) 
 
     def knowledge_distillation_loss(self, logits, labels, teacher_logits):
-        """Logit adjustment loss."""
-        alpha = 0.0
-        T = 1
-        loss = F.cross_entropy(input=logits, target=labels)
-
+        alpha = 0.1 # 값이 작을 수록 효과가 좋다는 말이 있다
+        T = 10 # 값을 키울 수록 확률이 낮은 값은 크게, 큰 값은 작게  
         if teacher_logits == None:
-            return loss    
-        else:
-            D_KL = nn.KLDivLoss(reduction='batchmean')(F.log_softmax(logits/T, dim=1), F.softmax(teacher_logits/T, dim=1)) * (T * T)
-            KD_loss =  (1. - alpha)*loss + alpha*D_KL
+            loss = F.cross_entropy(input=logits, target=labels)
+            return loss 
 
-            return KD_loss
+        else:
+            student_loss = F.cross_entropy(input=logits, target=labels)
+            distillation_loss = nn.KLDivLoss(reduction='batchmean')(F.log_softmax(logits/T, dim=1), F.softmax(teacher_logits/T, dim=1)) * (T * T)
+            total_loss =  alpha*student_loss + (1. - alpha)*distillation_loss
+
+            return total_loss
