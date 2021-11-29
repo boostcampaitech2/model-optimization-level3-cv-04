@@ -563,7 +563,7 @@ def tune(gpu_id, seed, storage: str = None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Optuna tuner.")
     parser.add_argument("--gpu", default=0, type=int, help="GPU id to use")
-    parser.add_argument("--storage", default="", type=str, help="Optuna database storage path.")
+    parser.add_argument("--storage", default="sqlite:///seyoung.db", type=str, help="Optuna database storage path.")
     parser.add_argument("--seed", default=0, type=int, help="Sampler seed")
     args = parser.parse_args()
     tune(args.gpu, args.seed, storage=args.storage if args.storage != "" else None)

@@ -108,12 +108,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train model.")
     parser.add_argument(
         "--model",
-        default="configs/model/mobilenetv3.yaml",
+        default="configs/model/efficientnet_tune.yaml",
         type=str,
         help="model config",
     )
     parser.add_argument(
-        "--data", default="configs/data/taco.yaml", type=str, help="data config"
+        "--data", default="configs/data/taco_albu.yaml", type=str, help="data config"
     )
     parser.add_argument(
         "--seed", default=42, type=int, help="seed"
