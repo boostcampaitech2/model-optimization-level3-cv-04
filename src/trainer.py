@@ -102,6 +102,7 @@ class TorchTrainer:
         optimizer: optim.Optimizer,
         scheduler,
         model_path: str,
+        teacher_model=None,
         scaler=None,
         device: torch.device = "cpu",
         verbose: int = 1,
@@ -110,6 +111,7 @@ class TorchTrainer:
 
         Args:
             model: model to train
+            teacher model: teacher model to train_kd 
             criterion: loss function module
             optimizer: optimization module
             device: torch device
@@ -117,6 +119,7 @@ class TorchTrainer:
         """
 
         self.model = model
+        self.teacher_model = teacher_model
         self.model_path = model_path
         self.criterion = criterion
         self.optimizer = optimizer
@@ -163,6 +166,114 @@ class TorchTrainer:
                 outputs = torch.squeeze(outputs)
                 loss = self.criterion(outputs, labels)
 
+                self.optimizer.zero_grad()
+
+                if self.scaler:
+                    self.scaler.scale(loss).backward()
+                    self.scaler.step(self.optimizer)
+                    self.scaler.update()
+                else:
+                    loss.backward()
+                    self.optimizer.step()
+                self.scheduler.step()
+
+                _, pred = torch.max(outputs, 1)
+                total += labels.size(0)
+                correct += (pred == labels).sum().item()
+                preds += pred.to("cpu").tolist()
+                gt += labels.to("cpu").tolist()
+
+                running_loss += loss.item()
+
+                # wandb 
+                wandb.log({
+                    'lr': get_learning_rate(self.optimizer)[0],
+                    'train/loss': running_loss / (batch + 1),
+                    'train/acc': (correct / total) * 100,
+                    'train/f1' : f1_score(y_true=gt, y_pred=preds, labels=label_list, average='macro', zero_division=0)
+                })
+
+                pbar.update()
+                pbar.set_description(
+                    f"Train: [{epoch + 1:03d}] "
+                    f"Loss: {(running_loss / (batch + 1)):.3f}, "
+                    f"Acc: {(correct / total) * 100:.2f}% "
+                    f"F1(macro): {f1_score(y_true=gt, y_pred=preds, labels=label_list, average='macro', zero_division=0):.2f}"
+                )
+            wandb.log({'train_conf_mat' : wandb.plot.confusion_matrix(probs=None,y_true=gt, preds=preds,class_names=label_list_name) })
+
+            pbar.close()
+
+            _, test_f1, test_acc = self.test(
+                model=self.model, test_dataloader=val_dataloader
+            )
+            if best_test_f1 > test_f1:
+                continue
+            best_test_acc = test_acc
+            best_test_f1 = test_f1
+            print(f"Model saved. Current best test f1: {best_test_f1:.3f}")
+            save_model(
+                model=self.model,
+                path=self.model_path,
+                data=data,
+                device=self.device,
+            )
+
+        return best_test_acc, best_test_f1
+
+"""Knowledge Distillation
+- Author: Sungjin Park, Sangwon Lee  
+- Contact: 8639sung@gmail.com
+"""
+    def train_kd(
+        self,
+        train_dataloader: DataLoader,
+        n_epoch: int,
+        val_dataloader: Optional[DataLoader] = None,
+    ) -> Tuple[float, float]:
+        """Train model.
+
+        Args:
+            train_dataloader: data loader module which is a iterator that returns (data, labels)
+            n_epoch: number of total epochs for training
+            val_dataloader: dataloader for validation
+
+        Returns:
+            loss and accuracy
+        """
+        best_test_acc = -1.0
+        best_test_f1 = -1.0
+        num_classes = _get_len_label_from_dataset(train_dataloader.dataset)
+        label_list_name = _get_label_from_dataset(train_dataloader.dataset)
+        label_list = [i for i in range(num_classes)]
+
+        for epoch in range(n_epoch):
+            running_loss, correct, total = 0.0, 0, 0
+            preds, gt = [], []
+            pbar = tqdm(enumerate(train_dataloader), total=len(train_dataloader))
+
+            self.model.train()
+            self.teacher_model.eval()
+
+            for batch, (data, labels) in pbar:
+                data, labels = data.to(self.device), labels.to(self.device)
+                
+                # student output
+                if self.scaler:
+                    with torch.cuda.amp.autocast():
+                        outputs = self.model(data)
+                else:
+                    outputs = self.model(data)
+                outputs = torch.squeeze(outputs)
+
+                # teacher output
+                if self.scaler:
+                    with torch.cuda.amp.autocast():
+                        outputs_teacher = self.teacher_model(data)
+                else:
+                    outputs_teacher = self.teacher_model(data)
+
+                loss = self.criterion(outputs, labels, outputs_teacher) 
                 self.optimizer.zero_grad()
 
                 if self.scaler:

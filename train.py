@@ -41,17 +41,6 @@ def train(
     model_path = os.path.join(log_dir, "best.pt")
     print(f"Model save path: {model_path}")
 
-    # load Pretrained model
-    checkpoint = os.path.join("saved/mobilenetv3_small_0.75.pt")
-    if os.path.isfile(checkpoint):
-        print(f"Model load: {checkpoint}")
-        state_dict = torch.load(checkpoint, map_location=device)
-        # num_classes가 달라서 head의 weight는 불러오지 않음
-        temp = OrderedDict()
-        for n, v in state_dict.items():
-            name = n.replace("head.","") 
-            temp[name] = v
-        model_instance.load_state_dict(temp, strict=False)
     model_instance.model.to(device)
 
     # Create dataloader

@@ -17,6 +17,7 @@ from torchvision.datasets import ImageFolder, VisionDataset
 from src.utils.data import weights_for_balanced_classes
 from src.utils.torch_utils import split_dataset_index
 
+from src.dataset import AlbuImageFolder
 
 def create_dataloader(
     config: Dict[str, Any],
@@ -55,7 +56,7 @@ def get_dataset(
     data_path: str = "./save/data",
     dataset_name: str = "CIFAR10",
     img_size: float = 32,
-    val_ratio: float=0.2,
+    val_ratio: float = 0.2,
     transform_train: str = "simple_augment_train",
     transform_test: str = "simple_augment_test",
     transform_train_params: Dict[str, int] = None,
@@ -66,6 +67,8 @@ def get_dataset(
         transform_train_params = dict()
     if not transform_test_params:
         transform_test_params = dict()
+
+    albu = "albu" in transform_train
 
     # preprocessing policies
     transform_train = getattr(
@@ -83,8 +86,24 @@ def get_dataset(
         train_path = os.path.join(data_path, "train")
         val_path = os.path.join(data_path, "val")
         test_path = os.path.join(data_path, "test")
+        if albu:
+            print("Calling Albu Dataset")
+            train_dataset = AlbuImageFolder(root=train_path, transform=transform_train)
+        else:
+            train_dataset = ImageFolder(root=train_path, transform=transform_train)
+        val_dataset = ImageFolder(root=val_path, transform=transform_test)
+        test_dataset = ImageFolder(root=test_path, transform=transform_test)
+    
+    elif dataset_name == "TUNE":
+        train_path = os.path.join(data_path, "train")
+        val_path = os.path.join(data_path, "val")
+        test_path = os.path.join(data_path, "test")
 
         train_dataset = ImageFolder(root=train_path, transform=transform_train)
+        train_length = int(len(train_dataset) * (1.0-val_ratio))
+        train_dataset, _ = random_split(
+            train_dataset, [train_length, len(train_dataset) - train_length]
+        )
         val_dataset = ImageFolder(root=val_path, transform=transform_test)
         test_dataset = ImageFolder(root=test_path, transform=transform_test)
 

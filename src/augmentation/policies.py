@@ -16,6 +16,7 @@ DATASET_NORMALIZE_INFO = {
     "CIFAR100": {"MEAN": (0.5071, 0.4865, 0.4409), "STD": (0.2673, 0.2564, 0.2762)},
     "IMAGENET": {"MEAN": (0.485, 0.456, 0.406), "STD": (0.229, 0.224, 0.225)},
     "TACO": {"MEAN": (0.485, 0.456, 0.406), "STD": (0.229, 0.224, 0.225)},
+    "TUNE": {"MEAN": (0.485, 0.456, 0.406), "STD": (0.229, 0.224, 0.225)},
 }
 
 
@@ -103,10 +104,9 @@ def custom_augment_train(
     """Custom data augmentation rule for training TACO."""
     return transforms.Compose(
         [
-            SquarePad(),
-            transforms.Resize((int(img_size * 1.2), int(img_size * 1.2))),
+            transforms.Resize((int(img_size), int(img_size))),
             transforms.RandomResizedCrop(
-                size=img_size, ratio=(0.75, 1.0, 1.3333333333333333)
+                size=img_size, ratio=(0.75, 1.0)
             ),
             transforms.RandomHorizontalFlip(),
             transforms.RandomVerticalFlip(),
@@ -118,3 +118,31 @@ def custom_augment_train(
             ),
         ]
     )
+
+import albumentations as A
+from albumentations.pytorch import ToTensorV2
+import cv2
+
+def albu_heavy_train(
+    dataset: str = "CIFAR10", img_size: float = 32
+) -> A.Compose:
+    """Custom data augmentation rule for training TACO."""
+    return A.Compose([
+        A.LongestMaxSize(max_size=img_size),
+        A.PadIfNeeded(min_height=img_size, min_width=img_size, border_mode=cv2.BORDER_CONSTANT),
+        A.OneOf([
+            A.Flip(p=1.0),
+            A.RandomRotate90(p=1.0)
+        ], p=0.5),
+        A.RandomBrightnessContrast(brightness_limit=0.1, contrast_limit=0.15, p=0.5),
+        A.HueSaturationValue(hue_shift_limit=15, sat_shift_limit=25, val_shift_limit=10, p=0.5),
+        A.GaussNoise(p=0.3),
+        A.OneOf([
+            A.Blur(p=1.0), 
+            A.GaussianBlur(p=1.0),
+            A.MedianBlur(blur_limit=5, p=1.0), 
+            A.MotionBlur(p=1.0)
+        ], p=0.1), 
+        A.CLAHE(p=0.01),
+        ToTensorV2()
+    ])

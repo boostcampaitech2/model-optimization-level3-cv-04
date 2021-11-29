@@ -6,5 +6,5 @@ __pycache__
 exp
 output.csv
 wandb
-saved
 input/*
+saved/
