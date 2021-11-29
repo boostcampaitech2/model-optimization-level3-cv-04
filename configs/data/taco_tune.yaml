@@ -12,13 +12,13 @@
 # VAL_RATIO:  How many data to be used for validation checking
 
 DATA_PATH: "/opt/ml/data/"
-DATASET: "TACO"
+DATASET: "TUNE"
 IMG_SIZE: 96
 AUG_TRAIN: "simple_augment_train"
 AUG_TEST: "simple_augment_test"
 AUG_TRAIN_PARAMS: 
 BATCH_SIZE: 128
-EPOCHS: 50
+EPOCHS: 30
 VAL_RATIO: 0.8
 INIT_LR: 0.1
 FP16: True

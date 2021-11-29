@@ -16,6 +16,7 @@ DATASET_NORMALIZE_INFO = {
     "CIFAR100": {"MEAN": (0.5071, 0.4865, 0.4409), "STD": (0.2673, 0.2564, 0.2762)},
     "IMAGENET": {"MEAN": (0.485, 0.456, 0.406), "STD": (0.229, 0.224, 0.225)},
     "TACO": {"MEAN": (0.485, 0.456, 0.406), "STD": (0.229, 0.224, 0.225)},
+    "TUNE": {"MEAN": (0.485, 0.456, 0.406), "STD": (0.229, 0.224, 0.225)},
 }
 
 
@@ -103,10 +104,9 @@ def custom_augment_train(
     """Custom data augmentation rule for training TACO."""
     return transforms.Compose(
         [
-            SquarePad(),
-            transforms.Resize((int(img_size * 1.2), int(img_size * 1.2))),
+            transforms.Resize((int(img_size), int(img_size))),
             transforms.RandomResizedCrop(
-                size=img_size, ratio=(0.75, 1.0, 1.3333333333333333)
+                size=img_size, ratio=(0.75, 1.0)
             ),
             transforms.RandomHorizontalFlip(),
             transforms.RandomVerticalFlip(),
