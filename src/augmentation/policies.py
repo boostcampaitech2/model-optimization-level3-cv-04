@@ -121,6 +121,7 @@ def custom_augment_train(
 
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
+import cv2
 
 def albu_heavy_train(
     dataset: str = "CIFAR10", img_size: float = 32
