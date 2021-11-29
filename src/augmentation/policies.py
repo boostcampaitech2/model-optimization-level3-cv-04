@@ -127,12 +127,12 @@ def albu_heavy_train(
 ) -> A.Compose:
     """Custom data augmentation rule for training TACO."""
     return A.Compose([
-        A.Resize(img_size, img_size),
+        A.LongestMaxSize(max_size=img_size),
+        A.PadIfNeeded(min_height=img_size, min_width=img_size, border_mode=cv2.BORDER_CONSTANT),
         A.OneOf([
             A.Flip(p=1.0),
             A.RandomRotate90(p=1.0)
         ], p=0.5),
-        A.RandomResizedCrop(height=img_size, width=img_size, scale=(0.5, 1.0), p=0.5),
         A.RandomBrightnessContrast(brightness_limit=0.1, contrast_limit=0.15, p=0.5),
         A.HueSaturationValue(hue_shift_limit=15, sat_shift_limit=25, val_shift_limit=10, p=0.5),
         A.GaussNoise(p=0.3),
