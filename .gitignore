@@ -7,4 +7,4 @@ exp
 output.csv
 wandb
 input/*
-swin/saved
+saved/
