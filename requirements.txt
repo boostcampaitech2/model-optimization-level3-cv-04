@@ -14,3 +14,4 @@ ipywidgets
 matplotlib
 timm
 opencv-python
+yacs
