@@ -221,10 +221,10 @@ class TorchTrainer:
 
         return best_test_acc, best_test_f1
 
-"""Knowledge Distillation
-- Author: Sungjin Park, Sangwon Lee  
-- Contact: 8639sung@gmail.com
-"""
+    """Knowledge Distillation
+    - Author: Sungjin Park, Sangwon Lee  
+    - Contact: 8639sung@gmail.com
+    """
     def train_kd(
         self,
         train_dataloader: DataLoader,
