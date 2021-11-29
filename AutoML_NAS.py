@@ -1,4 +1,4 @@
-"""Tune Model Architecture. 
+"""AutoML_NAS
 - Author: SungJin Park
 - Contact: 8639sung@gmail.com
 """
@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Tuple
 import argparse
 
 DATA_CONFIG = read_yaml(cfg="configs/data/taco_tune.yaml")
-MODEL_CONFIG = read_yaml(cfg="configs/model/efficientnet_tune.yaml")
+MODEL_CONFIG = read_yaml(cfg="configs/model/example.yaml")
 
 def search_model(trial: optuna.trial.Trial) -> List[Any]:
     """Search model structure from user-specified search space."""
@@ -29,9 +29,9 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
     # Module 1
     m1 = trial.suggest_categorical("m1", ["Conv", "DWConv"])
     m1_args = []
-    m1_repeat = trial.suggest_int("m1/repeat", 1, 3)
+    m1_repeat = 1 # trial.suggest_int("m1/repeat", 1, 3)
     m1_out_channel = trial.suggest_int("m1/out_channels", low=16, high=24, step=8)
-    m1_stride = trial.suggest_int("m1/stride", low=1, high=UPPER_STRIDE)
+    m1_stride = 2 # trial.suggest_int("m1/stride", low=1, high=UPPER_STRIDE)
     if m1_stride == 2:
         n_stride += 1
     m1_activation = trial.suggest_categorical("m1/activation", ["ReLU", "Hardswish"])
@@ -46,17 +46,16 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
     # Module 2
     m2 = trial.suggest_categorical(
         "m2", [
-            "Conv", 
-            "DWConv", 
-            "InvertedResidualv2", 
-            "InvertedResidualv3", 
-            "MBConv",
-            "Pass"]
+            #"Conv", 
+            #"DWConv", 
+            #"InvertedResidualv2", 
+            #"InvertedResidualv3", 
+            "MBConv"]
     )
     m2_args = []
-    m2_repeat = trial.suggest_int("m2/repeat", 1, 5)
+    m2_repeat = 1
     m2_out_channel = trial.suggest_int("m2/out_channels", low=16, high=128, step=16)
-    m2_stride = trial.suggest_int("m2/stride", low=1, high=UPPER_STRIDE)
+    m2_stride = 2
     # force stride m2
     if n_stride == 0:
         m2_stride = 2
@@ -101,15 +100,15 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
     # Module 3
     m3 = trial.suggest_categorical(
         "m3", [
-            "Conv", 
-            "DWConv", 
-            "InvertedResidualv2", 
-            "InvertedResidualv3", 
+            #"Conv", 
+            #"DWConv", 
+            #"InvertedResidualv2", 
+            #"InvertedResidualv3", 
             "MBConv",
             "Pass"]
     )
     m3_args = []
-    m3_repeat = trial.suggest_int("m3/repeat", 1, 5)
+    m3_repeat = trial.suggest_int("m3/repeat", 1, 3)
     m3_stride = trial.suggest_int("m3/stride", low=1, high=UPPER_STRIDE)
     if m3 == "Conv":
         # Conv args: [out_channel, kernel_size, stride, padding, groups, activation]
@@ -153,15 +152,15 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
     # Module 4
     m4 = trial.suggest_categorical(
         "m4", [
-            "Conv", 
-            "DWConv", 
-            "InvertedResidualv2", 
-            "InvertedResidualv3", 
+            #"Conv", 
+            #"DWConv", 
+            #"InvertedResidualv2", 
+            #"InvertedResidualv3", 
             "MBConv",
             "Pass"]
     )
     m4_args = []
-    m4_repeat = trial.suggest_int("m4/repeat", 1, 5)
+    m4_repeat = trial.suggest_int("m4/repeat", 1, 3)
     m4_stride = trial.suggest_int("m4/stride", low=1, high=UPPER_STRIDE)
     # force stride m4
     if n_stride == 1:
@@ -208,15 +207,15 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
     # Module 5
     m5 = trial.suggest_categorical(
         "m5", [
-            "Conv", 
-            "DWConv", 
-            "InvertedResidualv2", 
-            "InvertedResidualv3", 
+            #"Conv", 
+            #"DWConv", 
+            #"InvertedResidualv2", 
+            #"InvertedResidualv3", 
             "MBConv",
             "Pass"]
     )
     m5_args = []
-    m5_repeat = trial.suggest_int("m5/repeat", 1, 5)
+    m5_repeat = trial.suggest_int("m5/repeat", 1, 3)
     m5_stride = 1
     if m5 == "Conv":
         # Conv args: [out_channel, kernel_size, stride, padding, groups, activation]
@@ -264,15 +263,15 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
     # Module 6
     m6 = trial.suggest_categorical(
         "m6", [
-            "Conv", 
-            "DWConv", 
-            "InvertedResidualv2", 
-            "InvertedResidualv3", 
+            #"Conv", 
+            #"DWConv", 
+            #"InvertedResidualv2", 
+            #"InvertedResidualv3", 
             "MBConv",
             "Pass"]
     )
     m6_args = []
-    m6_repeat = trial.suggest_int("m6/repeat", 1, 5)
+    m6_repeat = trial.suggest_int("m6/repeat", 1, 3)
     m6_stride = trial.suggest_int("m6/stride", low=1, high=UPPER_STRIDE)
     # force stride m6
     if n_stride == 2:
@@ -319,15 +318,15 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
     # Module 7
     m7 = trial.suggest_categorical(
         "m7", [
-            "Conv", 
-            "DWConv", 
-            "InvertedResidualv2", 
-            "InvertedResidualv3", 
+            #"Conv", 
+            #"DWConv", 
+            #"InvertedResidualv2", 
+            #"InvertedResidualv3", 
             "MBConv",
             "Pass"]
     )
     m7_args = []
-    m7_repeat = trial.suggest_int("m7/repeat", 1, 5)
+    m7_repeat = trial.suggest_int("m7/repeat", 1, 3)
     m7_stride = trial.suggest_int("m7/stride", low=1, high=UPPER_STRIDE)
     if m7 == "Conv":
         # Conv args: [out_channel, kernel_size, stride, padding, groups, activation]
@@ -395,17 +394,19 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
         float: score1(e.g. accuracy)
         int: score2(e.g. params)
     """
+    torch.cuda.empty_cache()
+    
     model_config = copy.deepcopy(MODEL_CONFIG)
     data_config = copy.deepcopy(DATA_CONFIG)
     
     # save dir
-    log_dir = os.path.join("exp/NAS", datetime.now().strftime(f"Trial_{trial.number}_%Y-%m-%d_%H-%M-%S"))
+    log_dir = os.path.join("exp/NAS_EFF", datetime.now().strftime(f"Trial_{trial.number}_%Y-%m-%d_%H-%M-%S"))
     os.makedirs(log_dir, exist_ok=True)
 
     # wandb init
     wandb.init(entity="cv4",
                 project='lightweight',
-                group="NAS",
+                group="NAS_EFF",
                 name=f'Trial_{trial.number}',
                 config=model_config,
                 reinit=True
@@ -432,11 +433,11 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
     params_nums = count_model_params(model)
 
     # skip unsuitable model 
-    if mean_time >= 10: 
+    if mean_time >= 6: 
         print(f' trial: {trial.number}, This model takes too much time:{mean_time}')
         raise optuna.structs.TrialPruned()
 
-    if params_nums >= 1000000:
+    if params_nums >= 500000:
         print(f' trial: {trial.number}, This model has too many param:{params_nums}')
         raise optuna.structs.TrialPruned()
 
@@ -507,7 +508,7 @@ def tune(gpu_id, seed, storage: str = None):
         storage=rdb_storage, 
         load_if_exists=True,
     )
-    study.optimize(lambda trial: objective(trial, device), n_trials=200)
+    study.optimize(lambda trial: objective(trial, device), n_trials=100)
 
     pruned_trials = [
         t for t in study.trials if t.state == optuna.trial.TrialState.PRUNED
