@@ -46,3 +46,32 @@ class CustomCriterion:
         logits_adjusted = logits + self.logit_adj_val.repeat(labels.shape[0], 1)
         loss = F.cross_entropy(input=logits_adjusted, target=labels)
         return loss
+
+
+"""Knowledge Distillation
+- Author: Sungjin Park, Sangwon Lee  
+- Contact: 8639sung@gmail.com
+"""
+class CustomCriterion_KD:
+    """Custom Criterion for Knowledge Distillation"""
+
+    def __init__(self, samples_per_cls, device, fp16=False, loss_type="softmax"):
+        self.criterion = self.knowledge_distillation_loss
+
+    def __call__(self, logits, labels, teacher_logits=None):
+        """Call criterion."""
+        return self.criterion(logits, labels, teacher_logits) 
+
+    def knowledge_distillation_loss(self, logits, labels, teacher_logits):
+        """Logit adjustment loss."""
+        alpha = 0.0
+        T = 1
+        loss = F.cross_entropy(input=logits, target=labels)
+
+        if teacher_logits == None:
+            return loss    
+        else:
+            D_KL = nn.KLDivLoss(reduction='batchmean')(F.log_softmax(logits/T, dim=1), F.softmax(teacher_logits/T, dim=1)) * (T * T)
+            KD_loss =  (1. - alpha)*loss + alpha*D_KL
+
+            return KD_loss
