@@ -16,8 +16,8 @@ from subprocess import _args_from_interpreter_flags
 import argparse
 
 EPOCH = 100
-DATA_PATH = "/opt/ml/input/data"  # type your data path here that contains test, train and val directories
-RESULT_MODEL_PATH = "./result_model.pt" # result model will be saved in this path
+DATA_PATH = "/opt/ml/data"  # type your data path here that contains test, train and val directories
+RESULT_MODEL_PATH = "./exp/automl/result_model.pt" # result model will be saved in this path
 
 
 def search_hyperparam(trial: optuna.trial.Trial) -> Dict[str, Any]:
@@ -450,12 +450,12 @@ def get_best_trial_with_condition(optuna_study: optuna.study.Study) -> Dict[str,
     return best_trial_
 
 
-def tune(gpu_id, seed, storage: str = None):
+def tune(gpu_id, storage: str = None):
     if not torch.cuda.is_available():
         device = torch.device("cpu")
     elif 0 <= gpu_id < torch.cuda.device_count():
         device = torch.device(f"cuda:{gpu_id}")
-    sampler = optuna.samplers.MOTPESampler(seed=seed)
+    sampler = optuna.samplers.MOTPESampler()
     if storage is not None:
         rdb_storage = optuna.storages.RDBStorage(url=storage)
     else:
@@ -498,6 +498,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Optuna tuner.")
     parser.add_argument("--gpu", default=0, type=int, help="GPU id to use")
     parser.add_argument("--storage", default="", type=str, help="Optuna database storage path.")
-    parser.add_argument("--seed", default=42, type=int, help="Sampler seed")
     args = parser.parse_args()
-    tune(args.gpu, args.seed, storage=args.storage if args.storage != "" else None)
+    tune(args.gpu, storage=args.storage if args.storage != "" else None)
