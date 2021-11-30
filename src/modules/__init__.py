@@ -15,7 +15,7 @@ from src.modules.mbconv import (MBConv, MBConvGenerator)
 from src.modules.linear import Linear, LinearGenerator
 from src.modules.poolings import (AvgPoolGenerator, GlobalAvgPool,
                                   GlobalAvgPoolGenerator, MaxPoolGenerator)
-
+from src.modules.resbottleneck import ResBottleneck, ResBottleneckGenerator
 
 __all__ = [
     "ModuleGenerator",
@@ -42,4 +42,6 @@ __all__ = [
     "ShuffleNetV2Generator",
     "MBConv",
     "MBConvGenerator",
+    "ResBottleneckGenerator", 
+    "ResBottleneck"
 ]
