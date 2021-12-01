@@ -123,7 +123,6 @@ def train_kd(
     student_model = student_model_instance.model
     model_path = os.path.join(log_dir, "best.pt")
     print(f"Student_Model save path: {model_path}")
-  
     student_model.to(device)
 
     """
@@ -148,8 +147,13 @@ def train_kd(
     train_dl, val_dl, test_dl = create_dataloader(data_config)
 
     # Create optimizer, scheduler, criterion
+    """
     optimizer = torch.optim.SGD(
         student_model.parameters(), lr=data_config["INIT_LR"], momentum=0.9
+    )
+    """
+    optimizer = torch.optim.AdamW(
+        student_model.parameters(), lr=data_config["INIT_LR"]
     )
     scheduler = torch.optim.lr_scheduler.OneCycleLR(
         optimizer=optimizer,

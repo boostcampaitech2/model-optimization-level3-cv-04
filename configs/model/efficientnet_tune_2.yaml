@@ -1,0 +1,17 @@
+input_channel: 3
+
+depth_multiple: 1.0
+width_multiple: 1.0
+
+backbone:
+    # [repeat, module, args]
+    [
+        [1, Conv, [16, 3, 2, null, 1, "HardSwish"]],
+        [1, MBConv, [2, 40, 2, 5]],
+        [1, MBConv, [2, 32, 1, 5]],
+        [1, MBConv, [1, 32, 2, 3]],
+        [1, Conv, [768, 1, 1]],
+        [1, GlobalAvgPool, []],
+        [1, Flatten, []],
+        [1, Linear, [6]]
+    ]
