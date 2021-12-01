@@ -135,11 +135,7 @@ def train_kd(
     
     print(f"Teacher_Model load: {checkpoint}")
     state_dict = torch.load(checkpoint, map_location=device)
-    temp = OrderedDict()
-    for n, v in state_dict.items():
-        name = n.replace("head.","") 
-        temp[name] = v
-    teacher_model.load_state_dict(temp, strict=False)
+    teacher_model.load_state_dict(state_dict, strict=False)
 
     teacher_model.to(device)
 
@@ -204,7 +200,7 @@ if __name__ == "__main__":
     # Model
     parser.add_argument(
         "--model",
-        default="configs/model/mobilenetv3.yaml",
+        default="configs/model/model_79.yaml",
         type=str,
         help="student model config",
     )
@@ -226,7 +222,7 @@ if __name__ == "__main__":
     # Distill Mode Check
     parser.add_argument(
         "--distill_mode",
-        default=False,
+        default=True,
         type=bool,
         help="True : Distillation Mode Train, False : General Train"
     )
