@@ -1,5 +1,10 @@
 """AutoML_NAS
-- Author: SungJin Park
+This code is based on
+- Author: Junghoon Kim, Jongsun Shin
+- Contact: placidus36@gmail.com, shinn1897@makinarocks.ai
+
+Modified by
+- Author: SungJin Park, YoonyoungL
 - Contact: 8639sung@gmail.com
 """
 import optuna
@@ -29,9 +34,9 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
     # Module 1
     m1 = trial.suggest_categorical("m1", ["Conv", "DWConv"])
     m1_args = []
-    m1_repeat = 1 # trial.suggest_int("m1/repeat", 1, 3)
-    m1_out_channel = trial.suggest_int("m1/out_channels", low=16, high=24, step=8)
-    m1_stride = 2 # trial.suggest_int("m1/stride", low=1, high=UPPER_STRIDE)
+    m1_repeat = trial.suggest_int("m1/repeat", 1, 3)
+    m1_out_channel = trial.suggest_int("m1/out_channels", low=16, high=64, step=16)
+    m1_stride = trial.suggest_int("m1/stride", low=1, high=UPPER_STRIDE)
     if m1_stride == 2:
         n_stride += 1
     m1_activation = trial.suggest_categorical("m1/activation", ["ReLU", "Hardswish"])
@@ -45,17 +50,12 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
 
     # Module 2
     m2 = trial.suggest_categorical(
-        "m2", [
-            #"Conv", 
-            #"DWConv", 
-            #"InvertedResidualv2", 
-            #"InvertedResidualv3", 
-            "MBConv"]
+        "m2", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "MBConv", "Pass"]
     )
     m2_args = []
-    m2_repeat = 1
+    m2_repeat = trial.suggest_int("m2/repeat", 1, 5)
     m2_out_channel = trial.suggest_int("m2/out_channels", low=16, high=128, step=16)
-    m2_stride = 2
+    m2_stride = trial.suggest_int("m2/stride", low=1, high=UPPER_STRIDE)
     # force stride m2
     if n_stride == 0:
         m2_stride = 2
@@ -86,10 +86,11 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         # k t c SE HS s
         m2_args = [m2_kernel, m2_t, m2_c, m2_se, m2_hs, m2_stride]
     elif m2 == "MBConv":
-        m2_t = trial.suggest_int("m2/MB_t", low=1, high=3)
-        m2_c = trial.suggest_int("m2/MB_c", low=16, high=40, step=8)
-        m2_kernel = trial.suggest_int("m2/kernel_size", low=3, high=5, step=2)
-        m2_args = [m2_t, m2_c, m2_stride, m2_kernel]
+        # expand_ratio, out_channel, stride, kernel_size
+        m2_t = trial.suggest_categorical("m2/mb_t", [1, 6])
+        m2_s = trial.suggest_categorical("m2/mb_s", [1, 2])
+        m2_k = trial.suggest_categorical("m2/mb_k", [3, 5])
+        m2_args = [m2_t, m2_out_channel, m2_s, m2_k]  
     if not m2 == "Pass":
         if m2_stride == 2:
             n_stride += 1
@@ -99,16 +100,11 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
 
     # Module 3
     m3 = trial.suggest_categorical(
-        "m3", [
-            #"Conv", 
-            #"DWConv", 
-            #"InvertedResidualv2", 
-            #"InvertedResidualv3", 
-            "MBConv",
-            "Pass"]
+        "m3", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "MBConv", "Pass"]
     )
     m3_args = []
-    m3_repeat = trial.suggest_int("m3/repeat", 1, 3)
+    m3_repeat = trial.suggest_int("m3/repeat", 1, 5)
+    m3_out_channel = trial.suggest_int("m3/out_channels", low=16, high=128, step=16)
     m3_stride = trial.suggest_int("m3/stride", low=1, high=UPPER_STRIDE)
     if m3 == "Conv":
         # Conv args: [out_channel, kernel_size, stride, padding, groups, activation]
@@ -138,10 +134,11 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m3_hs = trial.suggest_categorical("m3/v3_hs", [0, 1])
         m3_args = [m3_kernel, m3_t, m3_c, m3_se, m3_hs, m3_stride]
     elif m3 == "MBConv":
-        m3_t = trial.suggest_int("m3/MB_t", low=1, high=6)
-        m3_c = trial.suggest_int("m3/MB_c", low=8, high=40, step=8)
-        m3_kernel = trial.suggest_int("m3/kernel_size", low=3, high=5, step=2)
-        m3_args = [m3_t, m3_c, m3_stride, m3_kernel]
+        # expand_ratio, out_channel, stride, kernel_size
+        m3_t = trial.suggest_categorical("m3/mb_t", [1, 6])
+        m3_s = trial.suggest_categorical("m3/mb_s", [1, 2])
+        m3_k = trial.suggest_categorical("m3/mb_k", [3, 5])
+        m3_args = [m3_t, m3_out_channel, m3_s, m3_k]   
     if not m3 == "Pass":
         if m3_stride == 2:
             n_stride += 1
@@ -151,23 +148,17 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
 
     # Module 4
     m4 = trial.suggest_categorical(
-        "m4", [
-            #"Conv", 
-            #"DWConv", 
-            #"InvertedResidualv2", 
-            #"InvertedResidualv3", 
-            "MBConv",
-            "Pass"]
+        "m4", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "MBConv", "Pass"]
     )
     m4_args = []
-    m4_repeat = trial.suggest_int("m4/repeat", 1, 3)
+    m4_repeat = trial.suggest_int("m4/repeat", 1, 5)
+    m4_out_channel = trial.suggest_int("m4/out_channels", low=16, high=256, step=16)
     m4_stride = trial.suggest_int("m4/stride", low=1, high=UPPER_STRIDE)
     # force stride m4
     if n_stride == 1:
         m4_stride = 2
     if m4 == "Conv":
         # Conv args: [out_channel, kernel_size, stride, padding, groups, activation]
-        m4_out_channel = trial.suggest_int("m4/out_channels", low=16, high=256, step=16)
         m4_kernel = trial.suggest_int("m4/kernel_size", low=1, high=5, step=2)
         m4_activation = trial.suggest_categorical(
             "m4/activation", ["ReLU", "Hardswish"]
@@ -175,7 +166,6 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m4_args = [m4_out_channel, m4_kernel, m4_stride, None, 1, m4_activation]
     elif m4 == "DWConv":
         # DWConv args: [out_channel, kernel_size, stride, padding_size, activation]
-        m4_out_channel = trial.suggest_int("m4/out_channels", low=16, high=256, step=16)
         m4_kernel = trial.suggest_int("m4/kernel_size", low=1, high=5, step=2)
         m4_activation = trial.suggest_categorical(
             "m4/activation", ["ReLU", "Hardswish"]
@@ -193,10 +183,11 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m4_hs = trial.suggest_categorical("m4/v3_hs", [0, 1])
         m4_args = [m4_kernel, m4_t, m4_c, m4_se, m4_hs, m4_stride]
     elif m4 == "MBConv":
-        m4_t = trial.suggest_int("m4/MB_t", low=1, high=6)
-        m4_c = trial.suggest_int("m4/MB_c", low=8, high=80, step=8)
-        m4_kernel = trial.suggest_int("m4/kernel_size", low=3, high=5, step=2)
-        m4_args = [m4_t, m4_c, m4_stride, m4_kernel]
+        # expand_ratio, out_channel, stride, kernel_size
+        m4_t = trial.suggest_categorical("m4/mb_t", [1, 6])
+        m4_s = trial.suggest_categorical("m4/mb_s", [1, 2])
+        m4_k = trial.suggest_categorical("m4/mb_k", [3, 5])
+        m4_args = [m4_t, m4_out_channel, m4_s, m4_k]   
     if not m4 == "Pass":
         if m4_stride == 2:
             n_stride += 1
@@ -206,20 +197,14 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
 
     # Module 5
     m5 = trial.suggest_categorical(
-        "m5", [
-            #"Conv", 
-            #"DWConv", 
-            #"InvertedResidualv2", 
-            #"InvertedResidualv3", 
-            "MBConv",
-            "Pass"]
+        "m5", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "MBConv", "Pass"]
     )
     m5_args = []
-    m5_repeat = trial.suggest_int("m5/repeat", 1, 3)
+    m5_repeat = trial.suggest_int("m5/repeat", 1, 5)
+    m5_out_channel = trial.suggest_int("m5/out_channels", low=16, high=256, step=16)
     m5_stride = 1
     if m5 == "Conv":
         # Conv args: [out_channel, kernel_size, stride, padding, groups, activation]
-        m5_out_channel = trial.suggest_int("m5/out_channels", low=16, high=256, step=16)
         m5_kernel = trial.suggest_int("m5/kernel_size", low=1, high=5, step=2)
         m5_activation = trial.suggest_categorical(
             "m5/activation", ["ReLU", "Hardswish"]
@@ -228,7 +213,6 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m5_args = [m5_out_channel, m5_kernel, m5_stride, None, 1, m5_activation]
     elif m5 == "DWConv":
         # DWConv args: [out_channel, kernel_size, stride, padding_size, activation]
-        m5_out_channel = trial.suggest_int("m5/out_channels", low=16, high=256, step=16)
         m5_kernel = trial.suggest_int("m5/kernel_size", low=1, high=5, step=2)
         m5_activation = trial.suggest_categorical(
             "m5/activation", ["ReLU", "Hardswish"]
@@ -249,10 +233,11 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m5_stride = trial.suggest_int("m5/stride", low=1, high=UPPER_STRIDE)
         m5_args = [m5_kernel, m5_t, m5_c, m5_se, m5_hs, m5_stride]
     elif m5 == "MBConv":
-        m5_t = trial.suggest_int("m5/MB_t", low=1, high=6)
-        m5_c = trial.suggest_int("m5/MB_c", low=16, high=80, step=16)
-        m5_kernel = trial.suggest_int("m5/kernel_size", low=3, high=5, step=2)
-        m5_args = [m5_t, m5_c, m5_stride, m5_kernel]
+        # expand_ratio, out_channel, stride, kernel_size
+        m5_t = trial.suggest_categorical("m5/mb_t", [1, 6])
+        m5_s = trial.suggest_categorical("m5/mb_s", [1, 2])
+        m5_k = trial.suggest_categorical("m5/mb_k", [3, 5])
+        m5_args = [m5_t, m5_out_channel, m5_s, m5_k]  
     if not m5 == "Pass":
         if m5_stride == 2:
             n_stride += 1
@@ -262,23 +247,17 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
 
     # Module 6
     m6 = trial.suggest_categorical(
-        "m6", [
-            #"Conv", 
-            #"DWConv", 
-            #"InvertedResidualv2", 
-            #"InvertedResidualv3", 
-            "MBConv",
-            "Pass"]
+        "m6", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "MBConv", "Pass"]
     )
     m6_args = []
-    m6_repeat = trial.suggest_int("m6/repeat", 1, 3)
+    m6_repeat = trial.suggest_int("m6/repeat", 1, 5)
+    m6_out_channel = trial.suggest_int("m6/out_channels", low=16, high=512, step=16)
     m6_stride = trial.suggest_int("m6/stride", low=1, high=UPPER_STRIDE)
     # force stride m6
     if n_stride == 2:
         m4_stride = 2
     if m6 == "Conv":
         # Conv args: [out_channel, kernel_size, stride, padding, groups, activation]
-        m6_out_channel = trial.suggest_int("m6/out_channels", low=16, high=512, step=16)
         m6_kernel = trial.suggest_int("m6/kernel_size", low=1, high=5, step=2)
         m6_activation = trial.suggest_categorical(
             "m6/activation", ["ReLU", "Hardswish"]
@@ -286,7 +265,6 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m6_args = [m6_out_channel, m6_kernel, m6_stride, None, 1, m6_activation]
     elif m6 == "DWConv":
         # DWConv args: [out_channel, kernel_size, stride, padding_size, activation]
-        m6_out_channel = trial.suggest_int("m6/out_channels", low=16, high=512, step=16)
         m6_kernel = trial.suggest_int("m6/kernel_size", low=1, high=5, step=2)
         m6_activation = trial.suggest_categorical(
             "m6/activation", ["ReLU", "Hardswish"]
@@ -304,10 +282,11 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m6_hs = trial.suggest_categorical("m6/v3_hs", [0, 1])
         m6_args = [m6_kernel, m6_t, m6_c, m6_se, m6_hs, m6_stride]
     elif m6 == "MBConv":
-        m6_t = trial.suggest_int("m6/MB_t", low=1, high=6)
-        m6_c = trial.suggest_int("m6/MB_c", low=16, high=160, step=16)
-        m6_kernel = trial.suggest_int("m6/kernel_size", low=3, high=5, step=2)
-        m6_args = [m6_t, m6_c, m6_stride, m6_kernel]
+        # expand_ratio, out_channel, stride, kernel_size
+        m6_t = trial.suggest_categorical("m6/mb_t", [1, 6])
+        m6_s = trial.suggest_categorical("m6/mb_s", [1, 2])
+        m6_k = trial.suggest_categorical("m6/mb_k", [3, 5])
+        m6_args = [m6_t, m6_out_channel, m6_s, m6_k]   
     if not m6 == "Pass":
         if m6_stride == 2:
             n_stride += 1
@@ -317,20 +296,17 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
 
     # Module 7
     m7 = trial.suggest_categorical(
-        "m7", [
-            #"Conv", 
-            #"DWConv", 
-            #"InvertedResidualv2", 
-            #"InvertedResidualv3", 
-            "MBConv",
-            "Pass"]
+        "m7", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "MBConv", "Pass"]
     )
     m7_args = []
-    m7_repeat = trial.suggest_int("m7/repeat", 1, 3)
+    m7_repeat = trial.suggest_int("m7/repeat", 1, 5)
+    m7_out_channel = trial.suggest_int(
+            "m7/out_channels", low=128, high=1024, step=128
+        )
     m7_stride = trial.suggest_int("m7/stride", low=1, high=UPPER_STRIDE)
     if m7 == "Conv":
         # Conv args: [out_channel, kernel_size, stride, padding, groups, activation]
-        m7_out_channel = trial.suggest_int("m7/out_channels", low=128, high=1024, step=128)
+
         m7_kernel = trial.suggest_int("m7/kernel_size", low=1, high=5, step=2)
         m7_activation = trial.suggest_categorical(
             "m7/activation", ["ReLU", "Hardswish"]
@@ -338,7 +314,6 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m7_args = [m7_out_channel, m7_kernel, m7_stride, None, 1, m7_activation]
     elif m7 == "DWConv":
         # DWConv args: [out_channel, kernel_size, stride, padding_size, activation]
-        m7_out_channel = trial.suggest_int("m7/out_channels", low=128, high=1024, step=128)
         m7_kernel = trial.suggest_int("m7/kernel_size", low=1, high=5, step=2)
         m7_activation = trial.suggest_categorical(
             "m7/activation", ["ReLU", "Hardswish"]
@@ -356,10 +331,11 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m7_hs = trial.suggest_categorical("m7/v3_hs", [0, 1])
         m7_args = [m7_kernel, m7_t, m7_c, m7_se, m7_hs, m7_stride]
     elif m7 == "MBConv":
-        m7_t = trial.suggest_int("m7/MB_t", low=1, high=6)
-        m7_c = trial.suggest_int("m7/MB_c", low=8, high=160, step=8)
-        m7_kernel = trial.suggest_int("m7/kernel_size", low=3, high=5, step=2)
-        m7_args = [m7_t, m7_c, m7_stride, m7_kernel]
+        # expand_ratio, out_channel, stride, kernel_size
+        m7_t = trial.suggest_categorical("m7/mb_t", [1, 6])
+        m7_s = trial.suggest_categorical("m7/mb_s", [1, 2])
+        m7_k = trial.suggest_categorical("m7/mb_k", [3, 5])
+        m7_args = [m7_t, m7_out_channel, m7_s, m7_k]  
     if not m7 == "Pass":
         if m7_stride == 2:
             n_stride += 1
@@ -413,6 +389,12 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
                 )
 
     # model config
+    model_config["depth_multiple"] = trial.suggest_categorical(
+        "depth_multiple", [0.25, 0.5, 0.75, 1.0]
+    )
+    model_config["width_multiple"] = trial.suggest_categorical(
+        "width_multiple", [0.25, 0.5, 0.75, 1.0]
+    )
     model_config["INPUT_SIZE"] = [data_config["IMG_SIZE"], data_config["IMG_SIZE"]]
     model_config["backbone"], module_info = search_model(trial)
  
@@ -538,7 +520,7 @@ def tune(gpu_id, seed, storage: str = None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Optuna tuner.")
     parser.add_argument("--gpu", default=0, type=int, help="GPU id to use")
-    parser.add_argument("--storage", default="", type=str, help="Optuna database storage path.")
+    parser.add_argument("--storage", default="sqlite:///automl.db", type=str, help="Optuna database storage path.")
     parser.add_argument("--seed", default=42, type=int, help="Sampler seed")
     args = parser.parse_args()
     tune(args.gpu, args.seed, storage=args.storage if args.storage != "" else None)
