@@ -1,5 +1,6 @@
-# Model found with optuna
-# Similar performance model with less params and f1 score 
+# Model found with optuna by YoonyoungL
+# Similar performance model with less params and f1 score
+# number of parameters : 416,236
 input_channel: 3
 
 depth_multiple: 0.25
@@ -8,12 +9,14 @@ width_multiple: 1.0
 backbone:
     # [repeat, module, args]
     [
-        # Conv argument: [out_channel, kernel_size, stride, padding_size]
-        # if padding_size is not given or null, the padding_size will be auto adjusted as padding='SAME' in TensorFlow
+        # DWConv : [out_channel, kernel_size, stride, padding_size, activation]
+        # InvertedResidualv2 : [out_channel, expand_ratio, stride]
+        # Conv : [out_channel, kernel_size, stride, padding, groups, activation]
+        # InvertedResidualv3 : [kernel_size, expand_ratio, out_channel, use_se, use_hs, stride]
         [1, DWConv, [16, 3, 1, null, "ReLU"]],
         [1, DWConv, [112, 5, 2, null, "ReLU"]],
         [5, InvertedResidualv2, [64, 6, 1]],
-        [3, Conv, [96, 5, 2, null, 1, "Hardswish"]],     
+        [3, Conv, [96, 5, 2, null, 1, "Hardswish"]],
         [1, InvertedResidualv3, [5, 2.5, 64, 1, 0, 1]],
         [1, Conv, [768, 1, 1]],
         [1, GlobalAvgPool, []],

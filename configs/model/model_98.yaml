@@ -1,5 +1,6 @@
-# Model found with optuna
+# Model found with optuna by YoonyoungL
 # Similar performance model with less params and f1 score 
+# number of parameters : 808,016
 input_channel: 3
 
 depth_multiple: 0.25
@@ -8,8 +9,11 @@ width_multiple: 1.0
 backbone:
     # [repeat, module, args]
     [
-        # Conv argument: [out_channel, kernel_size, stride, padding_size]
-        # if padding_size is not given or null, the padding_size will be auto adjusted as padding='SAME' in TensorFlow
+        # DWConv : [out_channel, kernel_size, stride, padding_size, activation]
+        # MBConv : [expand_ratio, out_channel, stride, kernel_size]
+        # InvertedResidualv2 : [out_channel, expand_ratio, stride]
+        # Conv : [out_channel, kernel_size, stride, padding, groups, activation]
+        # InvertedResidualv3 : [kernel_size, expand_ratio, out_channel, use_se, use_hs, stride]
         [1, DWConv, [16, 3, 1, null, "ReLU"]],
         [1, DWConv, [112, 5, 2, null, "ReLU"]],
         [4, MBConv, [6, 128, 1, 5]],     
