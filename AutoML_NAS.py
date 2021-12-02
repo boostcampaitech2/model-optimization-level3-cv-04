@@ -10,13 +10,14 @@ Modified by
 import optuna
 import copy
 import os
+import torch.nn as nn
 from datetime import datetime
 import wandb
 import torch
 from src.model import Model
 from src.utils.torch_utils import model_info, check_runtime
 from src.utils.common import read_yaml
-from train import train
+from src.dataloader import TorchTrainer, create_dataloader
 from src.trainer import count_model_params
 from typing import Any, Dict, List, Tuple
 import argparse
@@ -422,15 +423,32 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, int, float]:
     if params_nums >= 500000:
         print(f' trial: {trial.number}, This model has too many param:{params_nums}')
         raise optuna.structs.TrialPruned()
+        
+    train_loader, val_loader, test_loader = create_dataloader(data_config)
 
-    # train current model
-    test_loss, test_f1, test_acc = train(
-        model_config=model_config,
-        data_config=data_config,
-        log_dir=log_dir,
-        fp16=data_config["FP16"],
-        device=device,
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.AdamW(
+        model.parameters(), lr=data_config["INIT_LR"]
     )
+    scheduler = torch.optim.lr_scheduler.OneCycleLR(
+        optimizer,
+        max_lr=0.1,
+        steps_per_epoch=len(train_loader),
+        epochs=data_config["EPOCHS"],
+        pct_start=0.05,
+    )
+
+    trainer = TorchTrainer(
+        model,
+        criterion,
+        optimizer,
+        scheduler,
+        device=device,
+        verbose=1,
+        model_path=log_dir,
+    )
+    trainer.train(train_loader, data_config["EPOCHS"], val_dataloader=val_loader)
+    loss, test_f1, acc_percent = trainer.test(model, test_dataloader=val_loader)
     
     wandb.log({'f1':test_f1,'params_nums':params_nums, 'mean_time':mean_time})
     
